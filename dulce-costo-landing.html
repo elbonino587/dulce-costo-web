@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content="Dulce Costo — La app para reposteras y emprendedoras gastronómicas. Calculá costos, guardá recetas y generá remitos con amor."/>
+<title>Dulce Costo — Tu asistente de repostería</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet"/>
+<style>
+  /* ── Variables ─────────────────────────────────────────────────────────── */
+  :root {
+    --pink:       #f4a0b0;
+    --pink-d:     #e07090;
+    --pink-soft:  #fde8ee;
+    --pink-pale:  #fff0f4;
+    --lav:        #c9a8e0;
+    --lav-soft:   #f0e8f8;
+    --lav-d:      #8a5cb0;
+    --cream:      #fdf0ec;
+    --cream-d:    #f8e0d8;
+    --brown:      #3d2020;
+    --brown-mid:  #8a5060;
+    --brown-lt:   #c09090;
+    --white:      #fff8f5;
+    --shadow:     rgba(200,100,120,0.15);
+    --shadow-lg:  rgba(200,100,120,0.25);
+  }
+
+  /* ── Reset ─────────────────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: #fdf0ec;
+    color: #3d2020;
+    overflow-x: hidden;
+  }
+  section { background: #fdf0ec; }
+
+  /* ── Animations ────────────────────────────────────────────────────────── */
+  @keyframes float    { 0%,100%{transform:translateY(0)}  50%{transform:translateY(-12px)} }
+  @keyframes floatR   { 0%,100%{transform:translateY(0) rotate(3deg)} 50%{transform:translateY(-10px) rotate(-3deg)} }
+  @keyframes fadeUp   { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:none} }
+  @keyframes pulse    { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+  @keyframes shimmer  { 0%{background-position:-200% center} 100%{background-position:200% center} }
+  @keyframes spin     { to{transform:rotate(360deg)} }
+  @keyframes wiggle   { 0%,100%{transform:rotate(-3deg)} 50%{transform:rotate(3deg)} }
+  @keyframes blob     { 0%,100%{border-radius:60% 40% 70% 30%/50% 60% 40% 70%} 50%{border-radius:40% 60% 30% 70%/60% 40% 70% 30%} }
+
+  .fade-up { opacity:0; transform:translateY(30px); transition: opacity .7s ease, transform .7s ease; }
+  .fade-up.visible { opacity:1; transform:none; }
+
+  /* ── NAV ───────────────────────────────────────────────────────────────── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(253,240,236,.92);
+    backdrop-filter: blur(14px);
+    border-bottom: 2px solid var(--cream-d);
+    padding: 12px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900; font-size: 22px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .nav-logo span:first-child { color: var(--pink); -webkit-text-stroke: .5px var(--pink-d); }
+  .nav-logo span:last-child  { color: var(--lav);  -webkit-text-stroke: .5px var(--lav-d);  }
+  .nav-logo .heart { color: var(--pink); font-size: 12px; margin: 0 2px; animation: pulse 2s infinite; }
+  .nav-cta {
+    background: var(--pink); color: #fff;
+    border: none; border-radius: 12px; padding: 9px 20px;
+    font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 14px;
+    cursor: pointer; text-decoration: none;
+    box-shadow: 0 4px 14px var(--shadow-lg);
+    transition: transform .18s, box-shadow .18s;
+  }
+  .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 20px var(--shadow-lg); }
+
+  /* ── HERO ──────────────────────────────────────────────────────────────── */
+  .hero {
+    min-height: 100vh;
+    padding: 100px 24px 60px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+
+  /* blob decorations */
+  .hero::before, .hero::after {
+    content: ''; position: absolute; border-radius: 50%; animation: blob 8s infinite;
+    pointer-events: none;
+  }
+  .hero::before {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, #f4a0b044, transparent 70%);
+    top: -100px; right: -100px;
+    animation-delay: 0s;
+  }
+  .hero::after {
+    width: 350px; height: 350px;
+    background: radial-gradient(circle, #c9a8e044, transparent 70%);
+    bottom: -80px; left: -80px;
+    animation-delay: 4s;
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--lav-soft); border: 2px solid var(--lav);
+    border-radius: 100px; padding: 6px 18px;
+    font-size: 13px; font-weight: 800; color: var(--lav-d);
+    margin-bottom: 24px; letter-spacing: .5px;
+    animation: fadeUp .6s ease both;
+  }
+
+  .hero h1 {
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(36px, 7vw, 64px);
+    font-weight: 900; line-height: 1.1;
+    color: var(--brown);
+    margin-bottom: 12px;
+    animation: fadeUp .6s .1s ease both;
+  }
+  .hero h1 em {
+    font-style: normal;
+    color: var(--pink);
+    -webkit-text-stroke: 1px var(--pink-d);
+  }
+
+  .hero-sub {
+    font-size: clamp(16px, 2.5vw, 20px);
+    color: var(--brown-mid); line-height: 1.6; max-width: 560px;
+    margin: 0 auto 36px;
+    animation: fadeUp .6s .2s ease both;
+  }
+
+  .hero-btns {
+    display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+    margin-bottom: 56px;
+    animation: fadeUp .6s .3s ease both;
+  }
+  .btn-primary {
+    background: var(--pink); color: #fff;
+    border: none; border-radius: 16px; padding: 15px 32px;
+    font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 16px;
+    cursor: pointer; text-decoration: none;
+    box-shadow: 0 6px 20px var(--shadow-lg);
+    transition: transform .18s, box-shadow .18s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 30px var(--shadow-lg); }
+  .btn-secondary {
+    background: transparent; color: var(--brown-mid);
+    border: 2.5px solid var(--cream-d); border-radius: 16px; padding: 13px 28px;
+    font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 16px;
+    cursor: pointer; text-decoration: none;
+    transition: border-color .18s, color .18s;
+  }
+  .btn-secondary:hover { border-color: var(--pink); color: var(--pink); }
+
+  /* phone mockup */
+  .hero-phone {
+    position: relative; width: 260px; margin: 0 auto;
+    animation: float 5s ease-in-out infinite, fadeUp .8s .4s ease both;
+  }
+  .phone-frame {
+    background: #fff8f5;
+    border-radius: 36px;
+    border: 3px solid var(--cream-d);
+    box-shadow: 0 24px 60px var(--shadow-lg), 0 0 0 6px rgba(244,160,176,.12);
+    overflow: hidden; padding: 16px 12px;
+  }
+  .phone-notch {
+    width: 80px; height: 8px; background: #f8e0d8;
+    border-radius: 100px; margin: 0 auto 14px;
+  }
+  .phone-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px; padding: 0 4px;
+  }
+  .phone-logo-text { font-weight: 900; font-size: 14px; }
+  .phone-logo-text .p { color: var(--pink); }
+  .phone-logo-text .l { color: var(--lav); }
+  .phone-tagline { font-size: 8px; color: var(--brown-lt); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; text-align:center;}
+  .phone-tagline2 { font-size: 7px; color: var(--brown-mid); font-style:italic; text-align:center; margin-bottom:10px; }
+  .phone-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .phone-card {
+    border-radius: 14px; padding: 12px 10px 10px; text-align: center;
+  }
+  .phone-card:nth-child(1) { background: #fde8ee; }
+  .phone-card:nth-child(2) { background: #fef0e8; }
+  .phone-card:nth-child(3) { background: #f0e8f8; }
+  .phone-card:nth-child(4) { background: #e8f4ee; }
+  .phone-card .icon { font-size: 22px; margin-bottom: 5px; }
+  .phone-card .label { font-size: 9px; font-weight: 900; color: var(--brown); }
+  .phone-card .sublabel { font-size: 7px; color: var(--brown-lt); }
+
+  /* floating stickers around phone */
+  .sticker {
+    position: absolute; pointer-events: none;
+    background: white; border-radius: 50%; box-shadow: 0 4px 12px var(--shadow);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .sticker-1 { width:52px;height:52px; top:-10px; left:-30px; animation: floatR 4s ease-in-out infinite; }
+  .sticker-2 { width:44px;height:44px; top:60px; right:-20px; animation: float 3.5s ease-in-out infinite; animation-delay:.5s; }
+  .sticker-3 { width:40px;height:40px; bottom:40px; left:-24px; animation: floatR 4.5s ease-in-out infinite; animation-delay:1s; }
+  .sticker-4 { width:48px;height:48px; bottom:10px; right:-16px; animation: float 3s ease-in-out infinite; animation-delay:.3s; }
+
+  /* ── SOCIAL PROOF ──────────────────────────────────────────────────────── */
+  .proof-strip {
+    background: #fff8f5;
+    border-top: 2px solid var(--cream-d);
+    border-bottom: 2px solid var(--cream-d);
+    padding: 20px 24px;
+    display: flex; align-items: center; justify-content: center;
+    gap: 40px; flex-wrap: wrap;
+  }
+  .proof-item { text-align: center; }
+  .proof-num { font-weight: 900; font-size: 28px; color: var(--pink); }
+  .proof-label { font-size: 12px; color: var(--brown-lt); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* ── SECTION COMMON ────────────────────────────────────────────────────── */
+  section { padding: 80px 24px; }
+  .section-tag {
+    display: inline-block;
+    background: var(--pink-soft); color: var(--pink-d);
+    border-radius: 100px; padding: 5px 16px;
+    font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .section-tag.lav { background: var(--lav-soft); color: var(--lav-d); }
+  h2.section-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 900; line-height: 1.2; color: var(--brown);
+    margin-bottom: 12px;
+  }
+  h2.section-title em { font-style:normal; color: var(--pink); }
+  .section-sub {
+    font-size: 17px; color: var(--brown-mid); line-height: 1.7; max-width: 560px;
+    margin-bottom: 48px;
+  }
+  .center { text-align: center; }
+  .center .section-sub { margin-left: auto; margin-right: auto; }
+
+  /* ── PROBLEM / SOLUTION ────────────────────────────────────────────────── */
+  .problem-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 800px; margin: 0 auto;
+  }
+  .problem-card {
+    background: #fff8f5; border-radius: 20px;
+    border: 2px solid var(--cream-d);
+    padding: 24px; box-shadow: 0 4px 20px var(--shadow);
+  }
+  .problem-card.bad  { border-color: #f2d5d5; }
+  .problem-card.good { border-color: #c9a8e0; background: var(--lav-soft); }
+  .problem-card .card-icon { font-size: 32px; margin-bottom: 12px; }
+  .problem-card h3 { font-size: 17px; font-weight: 900; color: var(--brown); margin-bottom: 8px; }
+  .problem-card p  { font-size: 14px; color: var(--brown-mid); line-height: 1.6; }
+
+  /* ── STEPS ─────────────────────────────────────────────────────────────── */
+  .steps-section { background: #fff8f5; }
+  .steps-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 24px; max-width: 1000px; margin: 0 auto;
+  }
+  .step-card {
+    background: #fdf0ec; border-radius: 24px;
+    border: 2px solid var(--cream-d);
+    padding: 28px 22px; text-align: center;
+    box-shadow: 0 4px 18px var(--shadow);
+    transition: transform .2s, box-shadow .2s;
+    position: relative; overflow: hidden;
+  }
+  .step-card:hover { transform: translateY(-6px); box-shadow: 0 12px 32px var(--shadow-lg); }
+  .step-card:nth-child(1) { background: var(--pink-soft); border-color: var(--pink); }
+  .step-card:nth-child(2) { background: #fef0e8; border-color: #f0c090; }
+  .step-card:nth-child(3) { background: var(--lav-soft); border-color: var(--lav); }
+  .step-card:nth-child(4) { background: #e8f4ee; border-color: #90c8a0; }
+  .step-num {
+    position: absolute; top: 14px; left: 14px;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: white; display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 14px; color: var(--pink);
+    box-shadow: 0 2px 8px var(--shadow);
+  }
+  .step-icon { font-size: 44px; margin-bottom: 14px; display: block; }
+  .step-title { font-size: 18px; font-weight: 900; color: var(--brown); margin-bottom: 6px; }
+  .step-desc  { font-size: 13px; color: var(--brown-mid); line-height: 1.6; }
+  .step-quote {
+    margin-top: 12px; padding: 10px 12px;
+    background: rgba(255,255,255,.7); border-radius: 10px;
+    font-size: 12px; font-style: italic; color: var(--brown-mid);
+    border-left: 3px solid var(--pink);
+  }
+
+  /* ── FEATURES ──────────────────────────────────────────────────────────── */
+  .features-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px; max-width: 960px; margin: 0 auto;
+  }
+  .feature-card {
+    background: #fff8f5; border-radius: 20px;
+    border: 2px solid var(--cream-d); padding: 24px;
+    box-shadow: 0 3px 16px var(--shadow);
+    transition: transform .18s, box-shadow .18s;
+  }
+  .feature-card:hover { transform: translateY(-4px); box-shadow: 0 8px 28px var(--shadow-lg); }
+  .feature-icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; margin-bottom: 14px;
+  }
+  .feature-icon.pink   { background: var(--pink-soft); }
+  .feature-icon.lav    { background: var(--lav-soft); }
+  .feature-icon.peach  { background: #fef0e8; }
+  .feature-icon.mint   { background: #e8f4ee; }
+  .feature-title { font-size: 17px; font-weight: 900; color: var(--brown); margin-bottom: 6px; }
+  .feature-desc  { font-size: 14px; color: var(--brown-mid); line-height: 1.6; }
+
+  /* ── PLANES ────────────────────────────────────────────────────────────── */
+  .planes-section { background: linear-gradient(135deg, var(--pink-soft), var(--lav-soft)); }
+  .planes-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px; max-width: 720px; margin: 0 auto;
+  }
+  .plan-card {
+    background: #fff8f5; border-radius: 24px;
+    border: 3px solid var(--cream-d); padding: 32px 28px;
+    box-shadow: 0 8px 32px var(--shadow);
+    position: relative; overflow: hidden;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .plan-card:hover { transform: translateY(-6px); box-shadow: 0 16px 48px var(--shadow-lg); }
+  .plan-card.pro {
+    border-color: var(--pink);
+    background: linear-gradient(145deg, #fff8f5, #fde8ee);
+  }
+  .plan-badge {
+    position: absolute; top: 18px; right: -28px;
+    background: var(--pink); color: white;
+    font-size: 11px; font-weight: 900; padding: 5px 36px;
+    transform: rotate(35deg); letter-spacing: 1px;
+  }
+  .plan-name { font-size: 13px; font-weight: 800; color: var(--brown-lt); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+  .plan-title { font-size: 28px; font-weight: 900; color: var(--brown); margin-bottom: 4px; }
+  .plan-sub { font-size: 13px; color: var(--brown-mid); margin-bottom: 24px; }
+  .plan-features { list-style: none; margin-bottom: 28px; }
+  .plan-features li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 14px; color: var(--brown-mid);
+    padding: 7px 0; border-bottom: 1px dashed var(--cream-d);
+  }
+  .plan-features li:last-child { border: none; }
+  .plan-features .check { color: var(--pink); font-weight: 900; flex-shrink: 0; margin-top: 1px; }
+  .plan-features .lock  { color: var(--brown-lt); flex-shrink: 0; margin-top: 1px; }
+  .plan-btn {
+    width: 100%; padding: 13px; border-radius: 14px; border: none;
+    font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 15px;
+    cursor: pointer; text-decoration: none; display: block; text-align: center;
+    transition: transform .18s, box-shadow .18s;
+  }
+  .plan-btn.base { background: #f8e0d8; color: var(--brown-mid); }
+  .plan-btn.pro  { background: var(--pink); color: white; box-shadow: 0 4px 16px var(--shadow-lg); }
+  .plan-btn:hover { transform: translateY(-2px); }
+
+  /* ── TESTIMONIALS ──────────────────────────────────────────────────────── */
+  .testi-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px; max-width: 900px; margin: 0 auto;
+  }
+  .testi-card {
+    background: #fff8f5; border-radius: 20px;
+    border: 2px solid var(--cream-d); padding: 24px;
+    box-shadow: 0 4px 18px var(--shadow);
+  }
+  .testi-quote { font-size: 15px; color: var(--brown-mid); line-height: 1.7; margin-bottom: 16px; font-style: italic; }
+  .testi-quote::before { content: '"'; color: var(--pink); font-size: 28px; font-family: 'Playfair Display', serif; line-height: 0; vertical-align: -8px; margin-right: 4px; }
+  .testi-author { display: flex; align-items: center; gap: 12px; }
+  .testi-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--pink-soft); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .testi-name  { font-weight: 900; font-size: 14px; color: var(--brown); }
+  .testi-role  { font-size: 12px; color: var(--brown-lt); }
+  .stars { color: #f4c040; font-size: 13px; margin-bottom: 6px; }
+
+  /* ── CTA FINAL ─────────────────────────────────────────────────────────── */
+  .cta-section {
+    background: linear-gradient(135deg, var(--pink), var(--lav));
+    padding: 80px 24px;
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .cta-section::before {
+    content: ''; position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='2' fill='white' opacity='.1'/%3E%3C/svg%3E");
+  }
+  .cta-section h2 { font-size: clamp(28px, 5vw, 44px); font-weight: 900; color: white; margin-bottom: 14px; position: relative; }
+  .cta-section p  { font-size: 18px; color: rgba(255,255,255,.85); margin-bottom: 36px; position: relative; }
+  .cta-btn {
+    background: white; color: var(--pink);
+    border: none; border-radius: 16px; padding: 16px 40px;
+    font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 18px;
+    cursor: pointer; text-decoration: none;
+    box-shadow: 0 8px 28px rgba(0,0,0,.2);
+    transition: transform .18s, box-shadow .18s;
+    position: relative; display: inline-block;
+  }
+  .cta-btn:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 14px 40px rgba(0,0,0,.25); }
+
+  /* ── FAQ ───────────────────────────────────────────────────────────────── */
+  .faq-section { max-width: 700px; margin: 0 auto; }
+  .faq-item {
+    background: #fff8f5; border-radius: 16px;
+    border: 2px solid var(--cream-d); margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .faq-q {
+    padding: 18px 20px; font-weight: 800; font-size: 15px; color: var(--brown);
+    cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+    user-select: none;
+  }
+  .faq-q:hover { color: var(--pink); }
+  .faq-q .arrow { font-size: 18px; transition: transform .25s; color: var(--pink); }
+  .faq-item.open .faq-q .arrow { transform: rotate(180deg); }
+  .faq-a {
+    max-height: 0; overflow: hidden; transition: max-height .35s ease, padding .3s ease;
+    font-size: 14px; color: var(--brown-mid); line-height: 1.7;
+    padding: 0 20px;
+  }
+  .faq-item.open .faq-a { max-height: 200px; padding: 0 20px 18px; }
+
+  /* ── FOOTER ────────────────────────────────────────────────────────────── */
+  footer {
+    background: var(--brown); color: var(--cream);
+    padding: 48px 24px 32px; text-align: center;
+  }
+  .footer-logo { font-size: 26px; font-weight: 900; margin-bottom: 8px; }
+  .footer-logo .p { color: var(--pink); }
+  .footer-logo .l { color: var(--lav); }
+  .footer-tagline { font-size: 13px; color: var(--brown-lt); margin-bottom: 24px; letter-spacing: 1px; }
+  .footer-links { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px; }
+  .footer-links a { color: var(--brown-lt); text-decoration: none; font-size: 13px; font-weight: 700; transition: color .18s; }
+  .footer-links a:hover { color: var(--pink); }
+  .footer-copy { font-size: 12px; color: #6a4040; }
+
+  /* ── DECORATIVE EMOJIS ─────────────────────────────────────────────────── */
+  .deco { pointer-events: none; user-select: none; }
+
+  /* ── RESPONSIVE ────────────────────────────────────────────────────────── */
+  @media (max-width: 640px) {
+    .problem-grid { grid-template-columns: 1fr; }
+    .hero-btns { flex-direction: column; align-items: center; }
+    .btn-primary, .btn-secondary { width: 100%; max-width: 300px; text-align: center; justify-content: center; }
+    .proof-strip { gap: 20px; }
+    nav { padding: 10px 16px; }
+    .nav-cta { padding: 8px 14px; font-size: 13px; }
+  }
+
+  /* ── SCROLL REVEAL ─────────────────────────────────────────────────────── */
+  .delay-1 { transition-delay: .1s; }
+  .delay-2 { transition-delay: .2s; }
+  .delay-3 { transition-delay: .3s; }
+  .delay-4 { transition-delay: .4s; }
+</style>
+</head>
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-logo">
+    <span>Dulce</span><span class="heart">♥</span><span>Costo</span>
+  </div>
+  <a href="#planes" class="nav-cta" onclick="document.getElementById('planes').scrollIntoView({behavior:'smooth'});return false;">Ver planes →</a>
+</nav>
+
+<!-- ── HERO ─────────────────────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-badge">🧁 Tu asistente de repostería</div>
+
+  <h1>¡Llegó la app que tu<br/><em>emprendimiento</em> necesitaba!</h1>
+
+  <p class="hero-sub">
+    Calculá costos, guardá recetas y generá remitos con amor.
+    Funciona en celular, tablet y computadora. Sin instalar nada.<br/><span style="font-size:15px;color:#8a5cb0;font-weight:800;display:inline-block;margin-top:8px;">📷 @DulceCostoApp</span>
+  </p>
+
+  <div class="hero-btns">
+    <a href="#planes" class="btn-primary" onclick="document.getElementById('planes').scrollIntoView({behavior:'smooth'});return false;">🚀 Ver planes</a>
+    <a href="#como-funciona" class="btn-secondary" onclick="document.getElementById('como-funciona').scrollIntoView({behavior:'smooth'});return false;">¿Cómo funciona?</a>
+  </div>
+
+  <!-- Phone mockup -->
+  <div class="hero-phone fade-up">
+    <div class="sticker sticker-1">🧁</div>
+    <div class="sticker sticker-2">💕</div>
+    <div class="sticker sticker-3">🎂</div>
+    <div class="sticker sticker-4">⭐</div>
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="phone-header">
+        <div class="phone-logo-text"><span class="p">Dulce</span><span style="color:var(--pink);font-size:8px">♥</span><span class="l">Costo</span></div>
+        <div style="font-size:14px">⚙️</div>
+      </div>
+      <div class="phone-tagline">TU ASISTENTE DE REPOSTERÍA</div>
+      <div class="phone-tagline2">Calculá, creá y vendé con amor ♥</div>
+      <div class="phone-grid">
+        <div class="phone-card">
+          <div class="icon">🧂</div>
+          <div class="label">Insumos</div>
+          <div class="sublabel">Ingredientes y precios</div>
+        </div>
+        <div class="phone-card">
+          <div class="icon">📖</div>
+          <div class="label">Recetas</div>
+          <div class="sublabel">Tus preparaciones</div>
+        </div>
+        <div class="phone-card">
+          <div class="icon">🧮</div>
+          <div class="label">Calculadora</div>
+          <div class="sublabel">Costos y precios</div>
+        </div>
+        <div class="phone-card">
+          <div class="icon">🧾</div>
+          <div class="label">Facturación</div>
+          <div class="sublabel">Remitos y comprobantes</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-size:8px;color:var(--brown-lt);margin-top:10px;">Hecho con ♥ para tu emprendimiento</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SOCIAL PROOF ──────────────────────────────────────────────────────────── -->
+<div class="proof-strip">
+  <div class="proof-item fade-up">
+    <div class="proof-num">5 min</div>
+    <div class="proof-label">Para empezar</div>
+  </div>
+  <div class="proof-item fade-up delay-1">
+    <div class="proof-num">5 min</div>
+    <div class="proof-label">Para calcular tu precio</div>
+  </div>
+  <div class="proof-item fade-up delay-2">
+    <div class="proof-num">3</div>
+    <div class="proof-label">Dispositivos compatibles</div>
+  </div>
+  <div class="proof-item fade-up delay-3">
+    <div class="proof-num">0</div>
+    <div class="proof-label">Datos personales requeridos</div>
+  </div>
+</div>
+
+<!-- ── PROBLEMA / SOLUCIÓN ───────────────────────────────────────────────────── -->
+<section style="padding: 80px 24px; background: #fdf0ec;">
+  <div class="center fade-up">
+    <div class="section-tag">El problema</div>
+    <h2 class="section-title">¿Cuánto deberías cobrar<br/>por tus <em>tortas</em>?</h2>
+    <p class="section-sub">Muchas reposteras cobran de más o de menos porque no tienen sus costos claros. Dulce Costo lo resuelve.</p>
+  </div>
+
+  <div class="problem-grid">
+    <div class="problem-card bad fade-up delay-1">
+      <div class="card-icon">😔</div>
+      <h3>Sin Dulce Costo…</h3>
+      <p>"No sé cuánto me cuesta todo ni cómo poner precio justo. Calculo de cabeza y siempre termino perdiendo."</p>
+    </div>
+    <div class="problem-card good fade-up delay-2">
+      <div class="card-icon">🥳</div>
+      <h3>Con Dulce Costo…</h3>
+      <p>"Tengo todo lo que necesito en un solo lugar. Sé exactamente cuánto cuesta cada torta y cuánto cobrar."</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── CÓMO FUNCIONA ─────────────────────────────────────────────────────────── -->
+<section class="steps-section" id="como-funciona">
+  <div class="center fade-up">
+    <div class="section-tag">En 5 minutos sabés calcularlo</div>
+    <h2 class="section-title">4 pasos, todo <em>resuelto</em></h2>
+    <p class="section-sub center">Simple, visual e intuitivo. Funciona en celular, tablet y computadora sin instalar nada.</p>
+  </div>
+
+  <div class="steps-grid">
+    <div class="step-card fade-up delay-1">
+      <div class="step-num">1</div>
+      <span class="step-icon">🧂</span>
+      <div class="step-title">Cargá tus insumos</div>
+      <div class="step-desc">Con precio y unidad. La app calcula automáticamente el costo por gramo, ml o unidad.</div>
+      <div class="step-quote">"Guardo todo lo que uso para mis recetas."</div>
+    </div>
+    <div class="step-card fade-up delay-2">
+      <div class="step-num">2</div>
+      <span class="step-icon">📖</span>
+      <div class="step-title">Guardá tus recetas</div>
+      <div class="step-desc">Con ingredientes y procedimiento. La app calcula sola cuánto te cuesta cada receta.</div>
+      <div class="step-quote">"La app calcula sola cuánto me cuesta cada receta."</div>
+    </div>
+    <div class="step-card fade-up delay-3">
+      <div class="step-num">3</div>
+      <span class="step-icon">🧮</span>
+      <div class="step-title">Calculá el precio justo</div>
+      <div class="step-desc">Ingresá tu ganancia ideal y la app te dice cuánto deberías cobrar por cada producto.</div>
+      <div class="step-quote">"Agrego mi ganancia ideal y sé cuánto debería cobrar."</div>
+    </div>
+    <div class="step-card fade-up delay-4">
+      <div class="step-num">4</div>
+      <span class="step-icon">🧾</span>
+      <div class="step-title">Generá remitos</div>
+      <div class="step-desc">Remitos profesionales para tus clientes con logo, datos de tu negocio y PDF listo para compartir.</div>
+      <div class="step-quote">"Profesionalizo mi negocio y mis clientes confían más."</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES ──────────────────────────────────────────────────────────────── -->
+<section>
+  <div class="center fade-up">
+    <div class="section-tag lav">Todo en uno</div>
+    <h2 class="section-title">Todo lo que necesitás,<br/><em>desde tu celular</em></h2>
+    <p class="section-sub center">Una sola app que reemplaza la libreta, la calculadora y los papeles sueltos.</p>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-card fade-up delay-1">
+      <div class="feature-icon pink">🧂</div>
+      <div class="feature-title">Insumos inteligentes</div>
+      <div class="feature-desc">Cargás el precio del kilo y la app calcula automáticamente el costo por gramo, ml o unidad para usar en tus recetas.</div>
+    </div>
+    <div class="feature-card fade-up delay-2">
+      <div class="feature-icon peach">📖</div>
+      <div class="feature-title">Recetas con costo automático</div>
+      <div class="feature-desc">Guardás la receta con ingredientes y cantidades. El costo se calcula solo. Podés agregar múltiples diámetros por receta.</div>
+    </div>
+    <div class="feature-card fade-up delay-3">
+      <div class="feature-icon lav">🧮</div>
+      <div class="feature-title">Calculadora de precios</div>
+      <div class="feature-desc">Calculá el precio de venta con el margen que quieras. Botones rápidos de +100%, +200% y +300%.</div>
+    </div>
+    <div class="feature-card fade-up delay-1">
+      <div class="feature-icon mint">🧾</div>
+      <div class="feature-title">Remitos profesionales</div>
+      <div class="feature-desc">Remitos con tu logo, datos del negocio, Instagram y Facebook. Exportá en PDF para compartir por WhatsApp.</div>
+    </div>
+    <div class="feature-card fade-up delay-2">
+      <div class="feature-icon pink">📊</div>
+      <div class="feature-title">Panel de ventas</div>
+      <div class="feature-desc">Seguí tus ventas, costos y ganancias con gráficos por mes. Vinculado automáticamente a tus remitos.</div>
+    </div>
+    <div class="feature-card fade-up delay-3">
+      <div class="feature-icon lav">💾</div>
+      <div class="feature-title">Tus datos, siempre seguros</div>
+      <div class="feature-desc">Todo se guarda en tu dispositivo. Sin registro, sin cuenta, sin que nadie vea tu información. Exportá e importá cuando quieras.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PLANES ────────────────────────────────────────────────────────────────── -->
+<section class="planes-section" id="planes">
+  <div class="center fade-up">
+    <div class="section-tag">Elegí tu plan</div>
+    <h2 class="section-title">Elegí el plan<br/>que se adapta a <em>vos</em></h2>
+    <p class="section-sub center">Ambas versiones funcionan en celular, tablet y computadora. Sin instalar nada.</p>
+  </div>
+
+  <div class="planes-grid">
+    <!-- BASE -->
+    <div class="plan-card fade-up delay-1">
+      <div class="plan-name">Plan</div>
+      <div class="plan-title">Base</div>
+      <div class="plan-sub">Funciones esenciales</div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> Insumos ilimitados</li>
+        <li><span class="check">✓</span> Recetas con costo automático</li>
+        <li><span class="check">✓</span> Calculadora de precios</li>
+        <li><span class="check">✓</span> Hasta 5 remitos</li>
+        <li><span class="check">✓</span> Modo noche cálido</li>
+        <li><span class="lock">🔒</span> Panel de ventas y gráficos</li>
+        <li><span class="lock">🔒</span> Remitos ilimitados + PDF</li>
+        <li><span class="lock">🔒</span> Logo en remitos</li>
+        <li><span class="lock">🔒</span> Exportar e importar datos</li>
+      </ul>
+      <a href="https://instagram.com/DulceCostoApp" target="_blank" class="plan-btn base">📷 Consultar precio Base</a>
+    </div>
+    <!-- PRO -->
+    <div class="plan-card pro fade-up delay-2">
+      <div class="plan-badge">PRO</div>
+      <div class="plan-name">Plan</div>
+      <div class="plan-title" style="color:var(--pink)">Pro</div>
+      <div class="plan-sub">Para emprendimientos en serio</div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> Todo lo del plan Base</li>
+        <li><span class="check">✓</span> <strong>Remitos ilimitados</strong></li>
+        <li><span class="check">✓</span> <strong>Exportar PDF para compartir</strong></li>
+        <li><span class="check">✓</span> <strong>Logo del negocio en remitos</strong></li>
+        <li><span class="check">✓</span> <strong>Panel de ventas y gráficos</strong></li>
+        <li><span class="check">✓</span> <strong>Exportar e importar datos</strong></li>
+        <li><span class="check">✓</span> <strong>Agregar desde recetas en remitos</strong></li>
+        <li><span class="check">✓</span> <strong>Código de acceso exclusivo</strong></li>
+      </ul>
+      <a href="https://instagram.com/DulceCostoApp" target="_blank" class="plan-btn pro">📷 Quiero Dulce Costo Pro →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── TESTIMONIALES ─────────────────────────────────────────────────────────── -->
+<section>
+  <div class="center fade-up">
+    <div class="section-tag lav">Lo que dicen</div>
+    <h2 class="section-title">Reposteras que ya<br/><em>cobran lo que vale</em></h2>
+  </div>
+
+  <div class="testi-grid">
+    <div class="testi-card fade-up delay-1">
+      <div class="stars">★★★★★</div>
+      <div class="testi-quote">Antes calculaba de cabeza y siempre perdía plata. Ahora sé exactamente cuánto cuesta cada torta y cuánto cobrar.</div>
+      <div class="testi-author">
+        <div class="testi-avatar">👩‍🍳</div>
+        <div><div class="testi-name">María L.</div><div class="testi-role">Repostera · Buenos Aires</div></div>
+      </div>
+    </div>
+    <div class="testi-card fade-up delay-2">
+      <div class="stars">★★★★★</div>
+      <div class="testi-quote">Los remitos son una maravilla. Mis clientes me preguntan con qué programa los hago. ¡Parezco una empresa!</div>
+      <div class="testi-author">
+        <div class="testi-avatar">👩‍🎂</div>
+        <div><div class="testi-name">Carla M.</div><div class="testi-role">Pastelera artesanal · Córdoba</div></div>
+      </div>
+    </div>
+    <div class="testi-card fade-up delay-3">
+      <div class="stars">★★★★★</div>
+      <div class="testi-quote">En 5 minutos cargué todos mis insumos y ya tenía el precio justo de mis tortas. ¡No puedo creer lo fácil que es!</div>
+      <div class="testi-author">
+        <div class="testi-avatar">🧁</div>
+        <div><div class="testi-name">Sofía R.</div><div class="testi-role">Emprendedora gastronómica · Rosario</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FAQ ───────────────────────────────────────────────────────────────────── -->
+<section style="background: #fff8f5; padding: 80px 24px;">
+  <div class="center fade-up" style="margin-bottom:40px">
+    <div class="section-tag">Preguntas frecuentes</div>
+    <h2 class="section-title">¿Tenés <em>dudas</em>?</h2>
+  </div>
+
+  <div class="faq-section">
+    <div class="faq-item fade-up">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        ¿Necesito instalar algo? <span class="arrow">▼</span>
+      </div>
+      <div class="faq-a">No. Dulce Costo es una app web. Se abre desde cualquier navegador (Chrome, Safari, Firefox) en tu celular, tablet o computadora. Sin descargas ni instalaciones.</div>
+    </div>
+    <div class="faq-item fade-up delay-1">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        ¿Mis datos son privados? <span class="arrow">▼</span>
+      </div>
+      <div class="faq-a">Sí. Todos tus datos se guardan únicamente en tu dispositivo. No se envían a ningún servidor. No requerimos registro, email ni datos personales.</div>
+    </div>
+    <div class="faq-item fade-up delay-2">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        ¿Puedo usar la app en el celular y la computadora? <span class="arrow">▼</span>
+      </div>
+      <div class="faq-a">Sí, funciona en todos los dispositivos. Para sincronizar los datos entre ellos usás la función de Exportar/Importar (disponible en la versión Pro) que genera un archivo que podés compartirte por WhatsApp o Google Drive.</div>
+    </div>
+    <div class="faq-item fade-up delay-3">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        ¿Cómo se instala en la pantalla de inicio del celular? <span class="arrow">▼</span>
+      </div>
+      <div class="faq-a">En iPhone: abrís el link en Safari → botón compartir → "Añadir a pantalla de inicio". En Android: abrís en Chrome → menú (tres puntos) → "Agregar a pantalla de inicio". Queda como una app nativa con ícono propio.</div>
+    </div>
+    <div class="faq-item fade-up delay-4">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        ¿Puedo compartir la app con otras reposteras? <span class="arrow">▼</span>
+      </div>
+      <div class="faq-a">Cada versión tiene un acceso personal. Escribinos a <strong>@DulceCostoApp</strong> en Instagram para obtener el tuyo.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA FINAL ─────────────────────────────────────────────────────────────── -->
+<section class="cta-section" id="contacto">
+  <h2>¿Querés Dulce Costo?<br/>¡Escribinos y empezá hoy! 🎉</h2>
+  <p>Escribinos a <strong>@DulceCostoApp</strong> en Instagram y te contamos todo.<br/>Porque tu trabajo tiene valor y merece ser bien cobrado. 💕</p>
+  <a href="https://instagram.com/DulceCostoApp" target="_blank" class="cta-btn">📷 Escribinos en Instagram</a>
+  <div style="margin-top:24px;font-size:14px;color:rgba(255,255,255,.7);position:relative;">
+    También podés consultar por la versión Base →
+    <a href="https://instagram.com/DulceCostoApp" target="_blank" style="color:white;font-weight:900;margin-left:6px;text-decoration:underline;">Consultar</a>
+  </div>
+</section>
+
+<!-- ── FOOTER ─────────────────────────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-logo">
+    <span class="p">Dulce</span><span style="color:var(--pink);font-size:16px;margin:0 3px">♥</span><span class="l">Costo</span>
+  </div>
+  <div class="footer-tagline">TU ASISTENTE DE REPOSTERÍA · Calculá, creá y vendé con amor</div>
+  <div class="footer-links">
+    <a href="#como-funciona" onclick="document.getElementById('como-funciona').scrollIntoView({behavior:'smooth'});return false;">Cómo funciona</a>
+    <a href="#planes" onclick="document.getElementById('planes').scrollIntoView({behavior:'smooth'});return false;">Planes</a>
+    <a href="https://instagram.com/DulceCostoApp" target="_blank">📷 @DulceCostoApp</a>
+    <a href="javascript:void(0)">Política de privacidad</a>
+    <a href="javascript:void(0)">Términos de uso</a>
+  </div>
+  <div class="footer-copy">© 2025 Dulce Costo · Hecho con ♥ para emprendedoras gastronómicas</div>
+</footer>
+
+<script>
+  // ── Scroll reveal ────────────────────────────────────────────────────────
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  // ── FAQ toggle ───────────────────────────────────────────────────────────
+  function toggleFaq(el) {
+    const item = el.parentElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if(!isOpen) item.classList.add('open');
+  }
+
+  // ── CTA buttons ──────────────────────────────────────────────────────────
+  // CTAs handled inline
+
+  // ── Smooth entrance for hero phone ───────────────────────────────────────
+  document.querySelector('.hero-phone').classList.add('visible');
+</script>
+</body>
+</html>
